@@ -66,7 +66,7 @@ The goal of this laboratory was to:
 
 ---
 
-# 🛠️ AWS Services Used
+## AWS Services Used
 
 | Service         | Purpose                                    |
 |---              |---                                         |
@@ -97,7 +97,7 @@ The email subscription was confirmed successfully.
 
 ---
 
-## 2. S3 Event Notification Configuration
+### 2. S3 Event Notification Configuration
 
 Configured Amazon S3 to send notifications for:
 
@@ -110,7 +110,7 @@ ObjectRemoved:Delete
 
 ---
 
-## 3. AWS CLI Configuration
+### 3. AWS CLI Configuration
 
 Configured AWS CLI using the IAM user credentials:
 
@@ -153,11 +153,6 @@ Observation:
 No notification was generated because GET operations were not configured as S3 events.
 
 ## 6. Testing Object Deletion Event
-
-
-<p align="center">
-  <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
-</p>
 
 
 Executed:
