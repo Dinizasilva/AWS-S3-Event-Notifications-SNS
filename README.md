@@ -120,7 +120,7 @@ aws configure
 Validated identity:
 aws sts get-caller-identity
 
-## 4.Testing Object Upload Event
+### 4.Testing Object Upload Event
 
 Uploaded an object:
 
@@ -139,7 +139,7 @@ Result:
 Event generated:
 ObjectCreated:Put
 
-## 5. Testing Object Retrieval
+### 5. Testing Object Retrieval
 
 Executed:
 
@@ -152,8 +152,12 @@ Observation:
 
 No notification was generated because GET operations were not configured as S3 events.
 
-## 6. Testing Object Deletion Event
+### 6. Testing Object Deletion Event
 
+
+<p align="center">
+  <img src="./assets/Gemini_Generated_Image_e0u5i3e0u5i3e0u5.png" width="850">
+</p>
 
 Executed:
 
