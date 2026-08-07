@@ -154,9 +154,11 @@ No notification was generated because GET operations were not configured as S3 e
 
 ## 6. Testing Object Deletion Event
 
+
 <p align="center">
   <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
 </p>
+
 
 Executed:
 
