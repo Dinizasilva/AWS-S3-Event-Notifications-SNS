@@ -45,14 +45,14 @@ The entire workflow was validated using AWS CLI commands executed from an EC2 CL
 
 ---
 
-## Architecture Overview
-
-
-
 ### Architecture Flow
 
+<p align="center">
+  <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
+</p>
 
-# 🎯 Objectives
+
+## Objectives
 
 The goal of this laboratory was to:
 
@@ -153,6 +153,10 @@ Observation:
 No notification was generated because GET operations were not configured as S3 events.
 
 ## 6. Testing Object Deletion Event
+
+<p align="center">
+  <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
+</p>
 
 Executed:
 
