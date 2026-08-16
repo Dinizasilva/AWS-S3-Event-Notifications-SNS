@@ -46,25 +46,48 @@ Região: us-east-1
 Bucket: cafe-eliana20260806
 Tópico SNS: s3NotificationTopic
 
-## Serviços AWS:
-
-AWS Cloud
-Amazon S3
-Amazon SNS
-AWS CLI
-IAM
-
-## Project Overview
-
-This project demonstrates the implementation of an event-driven notification architecture using AWS managed services.
-
-The solution configures an Amazon S3 bucket to generate event notifications when objects are created or removed. These events are delivered through Amazon SNS and consumed through an email subscription.
-
-The entire workflow was validated using AWS CLI commands executed from an EC2 CLI Host instance.
-
----
 
 ### Arquitetura
+
+
+## Etapa 1: Criar o tópico SNS e o inferno da confirmação por email.
+
+Criei o tópico s3NotificationTopic no console AWS. Tipo Standard.
+Adicionei minha assinatura por email. O SNS disse que mandou o email de confirmação.
+Esperei. Nada. Esperei mais. Nada.
+Fui verificar o status da assinatura no console: PendingConfirmation.
+
+Tentativa 2: Deletei a assinatura, criei de novo. Email chegou. Cliquei em confirmar. Voltei pro console: ainda PendingConfirmation.
+
+Tentativa 3: Deletei de novo, criei de novo. Email chegou. Cliquei. Console: Confirmed.
+O que aconteceu: O email do SNS demorando muito. E às vezes demora muito mesmo. Além disso, se você clicar no link de confirmação depois de já ter deletado a assinatura original, o link é inválido — por isso a primeira confirmação não funcionou.
+
+Lição: Não delete a assinatura antes de confirmar. Espere. Vai no spam. Vai na aba "Promoções". Vai em todo lugar. 
+O email do SNS vem de no-reply@sns.amazonaws.com e alguns provedores filtram como lixo.
+
+## Etapa 2: Conectar o S3 ao SNS
+
+Fui nas propriedades do bucket cafe-eliana20260806 e configurei Event Notifications:
+
+Eventos selecionados:
+ObjectCreated:Put — quando alguém faz upload
+ObjectRemoved:Delete — quando alguém deleta
+
+Destino: Tópico SNS s3NotificationTopic
+
+O S3 precisa de permissão pra publicar no SNS. O console AWS cuidou disso automaticamente criando a policy no tópico. Se fosse via CLI, eu teria que adicionar manualmente — o que me lembra: sempre verifique a policy do SNS quando não receber notificação.
+
+## Etapa 3: AWS CLI — configurando e testando
+
+Entrei numa instância EC2 (CLI Host) e configurei o AWS CLI:
+
+
+
+
+
+
+
+
 
 <p align="center">
   <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
