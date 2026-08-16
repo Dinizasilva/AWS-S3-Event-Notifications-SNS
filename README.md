@@ -1,4 +1,15 @@
-## AWS-S3-Event-Notifications-SNS
+<div align="center">
+  
+📦 AWS S3 Event Notifications + SNS
+Configurei um bucket S3 pra me mandar email toda vez que alguém subir ou deletar um arquivo. Depois tentei tornar um objeto público só pra ver o que acontecia.
+Spoiler: o AWS não deixou.
+https://aws.amazon.com/
+https://aws.amazon.com/s3/
+https://aws.amazon.com/sns/
+https://aws.amazon.com/iam/
+https://aws.amazon.com/cli/
+</div>
+
 
 <p align="center">
 
