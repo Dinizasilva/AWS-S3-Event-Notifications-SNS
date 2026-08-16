@@ -47,8 +47,8 @@ Bucket: cafe-eliana20260806
 Tópico SNS: s3NotificationTopic
 
 
-### Arquitetura
 
+## Arquitetura
 
 ## Etapa 1: Criar o tópico SNS e o inferno da confirmação por email.
 
