@@ -50,7 +50,7 @@ Tópico SNS: s3NotificationTopic
 
 ## Arquitetura
 
-## Etapa 1: Criar o tópico SNS e o inferno da confirmação por email.
+### Etapa 1: Criar o tópico SNS e o inferno da confirmação por email.
 
 Criei o tópico s3NotificationTopic no console AWS. Tipo Standard.
 Adicionei minha assinatura por email. O SNS disse que mandou o email de confirmação.
@@ -65,7 +65,7 @@ O que aconteceu: O email do SNS demorando muito. E às vezes demora muito mesmo.
 Lição: Não delete a assinatura antes de confirmar. Espere. Vai no spam. Vai na aba "Promoções". Vai em todo lugar. 
 O email do SNS vem de no-reply@sns.amazonaws.com e alguns provedores filtram como lixo.
 
-## Etapa 2: Conectar o S3 ao SNS
+### Etapa 2: Conectar o S3 ao SNS
 
 Fui nas propriedades do bucket cafe-eliana20260806 e configurei Event Notifications:
 
@@ -77,16 +77,105 @@ Destino: Tópico SNS s3NotificationTopic
 
 O S3 precisa de permissão pra publicar no SNS. O console AWS cuidou disso automaticamente criando a policy no tópico. Se fosse via CLI, eu teria que adicionar manualmente — o que me lembra: sempre verifique a policy do SNS quando não receber notificação.
 
-## Etapa 3: AWS CLI — configurando e testando
+### Etapa 3: AWS CLI — configurando e testando
 
 Entrei numa instância EC2 (CLI Host) e configurei o AWS CLI:
 
+aws configure
+### Access Key ID: [minha chave]
+### Secret Access Key: [minha secret]
+### Region: us-east-1
 
 
+### Validei quem eu sou
+aws sts get-caller-identity
 
+Tudo certo. Hora de bagunçar o bucket.
 
+### Etapa 4: Upload de objeto e notificação
 
+Subi uma imagem pro bucket:
 
+aws s3api put-object \
+  --bucket cafe-eliana20260806 \
+  --key images/Caramel-Delight.jpg \
+  --body ~/new-images/Caramel-Delight.jpg
+
+  Resposta:
+
+ {
+  "ETag": ""31ac30da619244b0ce786f106e4f3df7"",
+  "ServerSideEncryption": "AES256"
+}
+
+Arquivo no bucket - Ok
+Email no inbox Ok (com assunto do SNS e JSON do evento)
+
+O evento chegou assim:
+
+{
+  "Records": [{
+    "eventName": "ObjectCreated:Put",
+    "s3": {
+      "bucket": { "name": "cafe-eliana20260806" },
+      "object": { "key": "images/Caramel-Delight.jpg" }
+    }
+  }]
+}
+
+Funcionou de primeira. Fiquei surpresa.
+
+### Etapa 5: Download de objeto — e o silêncio
+
+Baixei um arquivo do bucket pra testar:
+
+aws s3api get-object \
+  --bucket cafe-eliana20260806 \
+  --key images/Donuts.jpg \
+  Donuts.jpg
+
+  Arquivo baixou. Mas nenhum email chegou.
+  
+Fiquei 2 minutos achando que tinha quebrado algo. Aí lembrei: eu configurei eventos só para Put e Delete. Get não gera evento no S3 por padrão.
+
+### O que eu aprendi: Só recebe notificação do que você configurou. Não adianta esperar email de download se você não pediu.
+
+### Etapa 6: Deleção de objeto e notificação
+
+Deletei um arquivo pra testar o outro evento:
+
+aws s3api delete-object \
+  --bucket cafe-eliana20260806 \
+  --key images/Strawberry-Tarts.jpg
+  
+Resposta:
+
+{
+  "DeleteMarker": true,
+  "VersionId": "..."
+}
+
+Email chegou em segundos. Evento ObjectRemoved:Delete. Pipeline completo.
+
+### Etapa 7: Teste de segurança — "e se eu tentar tornar público?"
+
+Tive uma ideia: e se alguém tentar tornar um objeto público via ACL? O que o AWS faz?
+
+aws s3api put-object-acl \
+  --bucket cafe-eliana20260806 \
+  --key images/Donuts.jpg \
+  --acl public-read
+
+Resposta:
+
+An error occurred (AccessDenied) when calling the PutObjectAcl operation:
+Access Denied
+
+Por que? O bucket tinha S3 Block Public Access ativado no nível da conta. Mesmo que eu tivesse permissão IAM pra mudar ACL, o Block Public Access bloqueia antes.
+Isso me mostrou duas camadas de segurança trabalhando juntas:
+IAM — controla quem pode fazer o quê
+Block Public Access — guarda-rail que impede exposição pública independente de IAM
+O que eu aprendi: Segurança na AWS não é só permissão. É também prevenção. O AccessDenied foi a melhor resposta que eu poderia receber.
 
 
 <p align="center">
@@ -94,161 +183,56 @@ Entrei numa instância EC2 (CLI Host) e configurei o AWS CLI:
 </p>
 
 
-## Objectives
+## Evidências
 
-The goal of this laboratory was to:
-
-- Create and configure Amazon S3 event notifications.
-- Integrate Amazon S3 with Amazon SNS.
-- Configure email subscriptions.
-- Validate object creation events.
-- Validate object deletion events.
-- Test security restrictions using AWS IAM permissions.
-- Use AWS CLI to automate S3 operations.
-
----
-
-## AWS Services Used
-
-| Service         | Purpose                                    |
-|---              |---                                         |
-| Amazon S3       | Object storage and event generation        |
-| Amazon SNS      | Message delivery and notification service  |
-| Amazon EC2      | CLI Host environment                       |                       
-| AWS IAM         | Identity and permission management         |
-| AWS CLI         | Command-line automation                    |
-
----
-
-## Implementation Steps
-
-## 1. Amazon SNS Topic Creation
-
-Created an SNS topic
-
-s3NotificationTopic
+| O que tá acontecendo                                   | Print                                   |
+| ------------------------------------------------------ | --------------------------------------- |
+| Arquitetura do pipeline S3 → SNS → Email               | `images/s3-sns-architecture.png`        |
+| Email de confirmação do SNS (demorou, mas chegou)      | `images/sns-email-confirmation.png`     |
+| Assinatura no console: PendingConfirmation → Confirmed | `images/sns-subscription-confirmed.png` |
+| Evento `ObjectCreated:Put` no email                    | `images/s3-put-event-email.png`         |
+| Evento `ObjectRemoved:Delete` no email                 | `images/s3-delete-event-email.png`      |
+| Erro `AccessDenied` no terminal                        | `images/s3-access-denied.png`           |
 
 
-Configuration:
+## Tech Stack
 
-Type: Standard
-Protocol: Email
-Status: Confirmed
-
-The email subscription was confirmed successfully.
-
----
-
-### 2. S3 Event Notification Configuration
-
-Configured Amazon S3 to send notifications for:
-
-✅ Object creation  
-✅ Object deletion
-
-Events:
-ObjectCreated:Put
-ObjectRemoved:Delete
-
----
-
-### 3. AWS CLI Configuration
-
-Configured AWS CLI using the IAM user credentials:
-
-```bash
-aws configure
-
-Validated identity:
-aws sts get-caller-identity
-
-### 4.Testing Object Upload Event
-
-Uploaded an object:
-
-aws s3api put-object \
---bucket cafe-eliana20260806 \
---key images/Caramel-Delight.jpg \
---body ~/new-images/Caramel-Delight.jpg
-
-Result:
-
-{
- "ETag": "\"31ac30da619244b0ce786f106e4f3df7\"",
- "ServerSideEncryption": "AES256"
-}
-
-Event generated:
-ObjectCreated:Put
-
-### 5. Testing Object Retrieval
-
-Executed:
-
-aws s3api get-object \
---bucket cafe-eliana20260806 \
---key images/Donuts.jpg \
-Donuts.jpg
-
-Observation:
-
-No notification was generated because GET operations were not configured as S3 events.
-
-### 6. Testing Object Deletion Event
-
-Executed:
-
-aws s3api delete-object \
---bucket cafe-eliana20260806 \
---key images/Strawberry-Tarts.jpg
-
-Event generated:
-
-ObjectRemoved:Delete
-
-SNS delivered the notification successfully by email.
-
-## Security Validation
-
-Attempted to make an object public:
-
-aws s3api put-object-acl \
---bucket cafe-eliana20260806 \
---key images/Donuts.jpg \
---acl public-read
-
-Expected result:
-
-AccessDenied
-
-Reason:
-
-BlockPublicAcls setting in S3 Block Public Access
-
-This confirmed that public ACL permissions were blocked.
-
-## Key Learnings
-
-Through this project I practiced:
-
-Event-driven architecture concepts
-Amazon S3 notifications
-SNS publish/subscribe model
-AWS CLI automation
-IAM permission management
-S3 security best practices
-Server-side encryption
-
-## Final Architecture
+Amazon S3 — storage e geração de eventos
+Amazon SNS — entrega de notificações por email
+AWS CLI — automação de operações no bucket
+IAM — credenciais e permissões
+S3 Block Public Access — guarda-rail de segurança
+Server-side encryption (AES-256) — criptografia padrão do bucket
 
 
-## Author
 
-Eliana Diniz
-linkedin: www.linkedin.com/in/eliana-diniz
+## O que esse lab realmente me ensinou
 
-Cloud Computing Student | AWS Cloud Practitioner Path
+1.Event-driven é diferente de polling. Eu não precisei ficar perguntando pro S3 "tem arquivo novo?". O S3 me avisou. Isso escala infinitamente melhor.
+2.SNS email tem delay. E às vezes trauma. O email demorou, chegou 3 vezes, e eu quase desisti. Em produção, você usaria Lambda ou SQS pra processar o evento em tempo real. Email é só pra teste e alertas simples.
+3.Block Public Access salva. Eu tentei tornar público e falhei. Em um bucket sem isso, eu teria exposto dados sem querer. Sempre ative.
+4.GET não é evento. Parece óbvio depois que você sabe. Mas quando o email não chegou, eu achei que tinha quebrado tudo.
+5.Confirmação de assinatura SNS é delicada. Não delete antes de confirmar. Espere. Olhe o spam. E tenha paciência.
 
-⭐ This project was developed as part of hands-on AWS Cloud training.
+
+## 🚧 Status
+
+[x] Tópico SNS criado
+[x] Assinatura por email confirmada (depois de 3 tentativas e muita paciência)
+[x] Eventos S3 configurados (Put + Delete)
+[x] Upload testado com notificação
+[x] Download testado (sem notificação, como esperado)
+[x] Deleção testada com notificação
+[x] Teste de segurança: AccessDenied no put-object-acl
+[ ] Conectar isso a uma Lambda pra processar eventos em vez de só email
+
+## 🌐 Contato
+💼 LinkedIn: linkedin.com/in/eliana-diniz
+📧 E-mail: eliana.dinizsilva@gmail.com
+
+"Tentei tornar um arquivo público. O AWS me deu um AccessDenied. Foi o melhor 'não' que eu já recebi."
+
+
+
 
 
