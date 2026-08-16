@@ -31,16 +31,20 @@ https://aws.amazon.com/cli/
 </p> 
 
 
-status:
-
-Documentation Complete
-English | Portuguese
-Cloud Project
 
 
 <p align="center">
   <img src="./assets/Gemini_Generated_Image_lycedlycedlycedl.png" width="650">
 </p>
+
+
+## O que é isso
+
+Lab prático de event-driven architecture na AWS. A ideia: toda vez que um arquivo é criado ou deletado num bucket S3, o bucket dispara um evento que chega no SNS e chega no meu email. Sem polling. Sem ficar atualizando a página. O S3 avisa sozinho.
+
+Região: us-east-1
+Bucket: cafe-eliana20260806
+Tópico SNS: s3NotificationTopic
 
 ## Serviços AWS:
 
@@ -60,7 +64,7 @@ The entire workflow was validated using AWS CLI commands executed from an EC2 CL
 
 ---
 
-### Architecture Flow
+### Arquitetura
 
 <p align="center">
   <img src="./assets/Gemini_Generated_Image_t499fat499fat499.png" width="650">
